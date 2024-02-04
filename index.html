@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting Poll</title>
+    <style>
+        body {
+            font-family: 'Open Sans', 'Arial', sans-serif;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+            color: #2c3e50;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #add-candidate-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            animation: fadeIn 1s ease;
+        }
+
+        #add-candidate-container label {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        #add-candidate-container input {
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            transition: border-color 0.3s ease;
+        }
+
+        #add-candidate-container input:focus {
+            border-color: #2ecc71;
+        }
+
+        #add-candidate-container button {
+            background-color: #2ecc71;
+            color: #fff;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        #add-candidate-container button:hover {
+            background-color: #27ae60;
+        }
+
+        #candidates-list {
+            list-style-type: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+
+        #candidates-list li {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 12px;
+            margin: 8px;
+            border-radius: 8px;
+            border: 2px solid #bdc3c7;
+            font-size: 18px;
+        }
+
+        #voting-container {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #voting-container div {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            margin: 12px;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            font-size: 18px;
+        }
+
+        #voting-container div:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        button {
+            background-color: #3498db;
+            color: #fff;
+            padding: 15px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="add-candidate-container">
+    <label for="new-candidate">New Candidate:</label>
+    <input type="text" id="new-candidate" placeholder="Enter candidate name">
+    <button onclick="addNewCandidate()">Add Candidate</button>
+</div>
+
+<ul id="candidates-list">
+    <!-- Initial candidates will be dynamically added here -->
+</ul>
+
+<ul id="voting-container">
+    <!-- Voting elements will be dynamically added here -->
+</ul>
+
+<button onclick="getWinner()">Determine Winner</button>
+
+<script defer>
+    document.addEventListener("DOMContentLoaded", function () {
+        var candidatesList = document.getElementById("candidates-list");
+        var votingContainer = document.getElementById("voting-container");
+        var candidateElements = []; // Array to store candidate elements
+
+        function createCandidateElements(candidateName) {
+            // Create a new div element for each candidate
+            var candidateDiv = document.createElement("div");
+            candidateDiv.textContent = candidateName;
+
+            // Create a voting counter for each candidate
+            var counterDiv = document.createElement("div");
+            counterDiv.textContent = "0";
+
+            // Create voting buttons for each candidate
+            var voteButton = createButton("Vote", function() {
+                increment(counterDiv);
+            });
+
+            // Create reset button for each candidate
+            var resetButton = createButton("Reset", function() {
+                reset(counterDiv);
+            });
+
+            // Create clear button for each candidate
+            var clearButton = createButton("Clear", function() {
+                clearCandidate(candidateDiv);
+            });
+
+            // Append candidate content, counter, and buttons to the main div
+            candidateDiv.appendChild(counterDiv);
+            candidateDiv.appendChild(voteButton);
+            candidateDiv.appendChild(resetButton);
+            candidateDiv.appendChild(clearButton);
+
+            // Append the new div to the voting container
+            votingContainer.appendChild(candidateDiv);
+
+            // Add the candidate element to the array
+            candidateElements.push({
+                name: candidateName,
+                div: candidateDiv,
+                counter: counterDiv
+            });
+        }
+
+        function createButton(text, clickHandler) {
+            var button = document.createElement("button");
+            button.textContent = text;
+            button.addEventListener("click", clickHandler);
+            return button;
+        }
+
+        function increment(counterDiv) {
+            counterDiv.textContent = parseInt(counterDiv.textContent) + 1;
+        }
+
+        function reset(counterDiv) {
+            counterDiv.textContent = "0";
+        }
+
+        function clearCandidate(candidateDiv) {
+            // Remove the candidate and associated elements from the voting container
+            candidateDiv.parentNode.removeChild(candidateDiv);
+            // Remove the candidate element from the array
+            candidateElements = candidateElements.filter(function(candidate) {
+                return candidate.div !== candidateDiv;
+            });
+        }
+
+        // Function to add a new candidate based on user input
+        window.addNewCandidate = function() {
+            var newCandidateInput = document.getElementById("new-candidate");
+            var newCandidateName = newCandidateInput.value.trim();
+
+            if (newCandidateName !== "") {
+                // Create a new list item for the new candidate
+                var newCandidateListItem = document.createElement("li");
+                newCandidateListItem.textContent = newCandidateName;
+
+                // Append the new candidate to the candidates list
+                candidatesList.appendChild(newCandidateListItem);
+
+                // Create elements for the new candidate in the voting container
+                createCandidateElements(newCandidateName);
+
+                // Clear the input field
+                newCandidateInput.value = "";
+            }
+        };
+
+        // Function to determine the winner
+        window.getWinner = function() {
+            var maxVotes = -1;
+            var winner = null;
+
+            candidateElements.forEach(function(candidate) {
+                var votes = parseInt(candidate.counter.textContent);
+
+                if (votes > maxVotes) {
+                    maxVotes = votes;
+                    winner = candidate.name;
+                }
+            });
+
+            if (winner !== null) {
+                alert("The winner is: " + winner);
+            } else {
+                alert("No winner yet. Cast some votes!");
+            }
+        };
+
+        // Initial creation of candidate elements
+        var candidateItems = candidatesList.getElementsByTagName("li");
+
+        for (var i = 0; i < candidateItems.length; i++) {
+            createCandidateElements(candidateItems[i].textContent.trim());
+        }
+    });
+</script>
+
+</body>
+</html>
